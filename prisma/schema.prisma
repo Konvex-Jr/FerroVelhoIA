@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id             Int              @id                 // id do Tiny
+  code           String?          @db.VarChar(60)
+  name           String?          @db.VarChar(200)
+  unit           String?          @db.VarChar(10)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  stocks         DepositStock[]
+  totalBalance   Decimal?         @db.Decimal(18,3)   // saldo total (produto.saldo)
+  totalReserved  Decimal?         @db.Decimal(18,3)   // saldo reservado (produto.saldoReservado)
+  lastTinyChange DateTime?                              // data_alteracao (se disponível)
+}
+
+model DepositStock {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  deposit    String   @db.VarChar(120)                // nome do depósito
+  company    String?  @db.VarChar(120)                // apelido da empresa (multiempresa)
+  balance    Decimal? @db.Decimal(18,3)               // deposito.saldo
+  reserved   Decimal? @db.Decimal(18,3)
+  Product    Product  @relation(fields: [productId], references: [id])
+
+  @@unique([productId, deposit])
+}
+
+model SyncCursor {
+  key       String   @id
+  valueStr  String?
+  valueDate DateTime?
+  updatedAt DateTime @default(now())
+}

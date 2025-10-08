@@ -1,0 +1,21 @@
+{
+  "name": "tiny-estoque",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "seed": "node scripts/seedProducts.js",
+    "snapshot": "node scripts/fetchStockSnapshot.js",
+    "deltas": "node scripts/syncDeltas.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "axios": "^1.7.7",
+    "bottleneck": "^2.19.5",
+    "dotenv": "^16.4.5",
+    "pg": "^8.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "prisma": "^5.18.0"
+  }
+}
