@@ -111,7 +111,6 @@ async function main() {
     if ((idx + 1) % 10 === 0) await setOffset(idx + 1);
   }
 
-  // grava cursor para deltas: agora - 10min (buffer)
   const agora = new Date();
   const cursorInicial = new Date(agora.getTime() - 10 * 60 * 1000);
   await prisma.syncCursor.upsert({
@@ -120,7 +119,7 @@ async function main() {
     create: { key: "estoque_cursor", valueStr: fmtBR(cursorInicial) }
   });
 
-  await setOffset(0); // fim — zera offset
+  await setOffset(0); 
 
   const totalMs = Date.now() - t0;
   console.log(`\n✅ Snapshot concluído em ${fmtDur(totalMs)} | Sucesso: ${ok} | Falhas: ${fail}\n`);

@@ -13,7 +13,7 @@ function parseBR(s) {
   return new Date(y, (m || 1) - 1, d || 1, H || 0, Mi || 0, S || 0);
 }
 
-const MAX_AGE_DAYS = 29; // margem dentro dos 30 dias do Tiny
+const MAX_AGE_DAYS = 29; 
 
 async function main() {
   const token = process.env.TINY_TOKEN;
@@ -22,11 +22,9 @@ async function main() {
   let cursorStr = (await prisma.syncCursor.findUnique({ where: { key: "estoque_cursor" } }))?.valueStr;
 
   if (!cursorStr) {
-    // sem snapshot prévio: comece de agora - 1 dia
     const start = new Date(Date.now() - 24 * 60 * 60 * 1000);
     cursorStr = fmtBR(start);
   } else {
-    // se muito antigo (>30 dias), trunque para agora - 29 dias
     const cur = parseBR(cursorStr);
     const limit = new Date(Date.now() - MAX_AGE_DAYS * 24 * 60 * 60 * 1000);
     if (cur < limit) cursorStr = fmtBR(limit);
@@ -91,7 +89,7 @@ async function main() {
 
         total++;
         if (produto.data_alteracao && produto.data_alteracao > maiorData) {
-          maiorData = produto.data_alteracao; // string dd/mm/aaaa hh:mm:ss
+          maiorData = produto.data_alteracao; 
         }
       }
     }

@@ -2,7 +2,6 @@ import axios from "axios";
 import Bottleneck from "bottleneck";
 
 const limiter = new Bottleneck({
-  // Mais conservador para evitar bloqueio (ajuste via .env)
   minTime: Number(process.env.TINY_MIN_TIME_MS || 1000),
   maxConcurrent: 1
 });
@@ -23,10 +22,9 @@ export async function pesquisarProdutos({ token, pesquisa = "", pagina = 1 }) {
   return data;
 }
 
-// Retry/backoff apenas para endpoints sensíveis a rate limit
 async function postFormWithRetry(url, form) {
   let attempt = 0;
-  let waitMs = 5000; // 5s inicial
+  let waitMs = 5000; 
   while (true) {
     const { data } = await postForm(url, form);
     const r = data?.retorno;
@@ -37,10 +35,10 @@ async function postFormWithRetry(url, form) {
       attempt++;
       console.warn(`Rate limit Tiny (tentativa ${attempt}). Aguardando ${Math.round(waitMs/1000)}s...`);
       await sleep(waitMs);
-      waitMs = Math.min(waitMs * 2, 5 * 60 * 1000); // máx 5 minutos
+      waitMs = Math.min(waitMs * 2, 5 * 60 * 1000); 
       continue;
     }
-    return data; // outros erros: retorna p/ o chamador tratar/logar
+    return data; 
   }
 }
 
