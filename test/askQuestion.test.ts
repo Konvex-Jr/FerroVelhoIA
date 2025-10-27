@@ -5,7 +5,6 @@ import MemoryRepositoryFactory from "../source/infra/repository/MemoryRepository
 import AskQuestion from "../source/useCases/askQuestion/AskQuestion";
 import AskQuestionInput from "../source/useCases/askQuestion/AskQuestionInput";
 import 'dotenv/config';
-import { extractPdfText } from '../source/domain/Services/extractTextFromPDF';
 import ChatHistoryService from '../source/domain/Services/ChatHistoryService';
 
 jest.mock('../source/domain/Services/extractTextFromPDF', () => ({
@@ -116,7 +115,7 @@ describe("AskQuestion use case", () => {
             conversationId
         };
 
-        const output2 = await askQuestion.execute(input2);
+        await askQuestion.execute(input2);
 
         const history = await chatHistoryService.getChatHistory(conversationId);
 
