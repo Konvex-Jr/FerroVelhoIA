@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import pdf from "pdf-parse";
 import mammoth from "mammoth";
-import { OpenAI } from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import RepositoryFactoryInterface from "../domain/Interfaces/RepositoryFactoryInterface";
 import ChunkRepositoryInterface from "../domain/Interfaces/ChunkRepositoryInterface";
 import EmbeddingService from "../domain/Services/EmbeddingService";
@@ -19,13 +19,13 @@ export default class ImportEmbeddings {
 
     constructor(
         repositoryFactory: RepositoryFactoryInterface,
-        openai: OpenAI,
+        gemini: GoogleGenerativeAI,
         embeddingService?: EmbeddingService
     ) {
         this.repositoryFactory = repositoryFactory;
         this.chunkRepository = repositoryFactory.createChunkRepository();
         this.embeddingService =
-            embeddingService || new EmbeddingService(this.repositoryFactory, openai);
+            embeddingService || new EmbeddingService(this.repositoryFactory, gemini);
     }
 
     async run(inputFolder: string = "./docs", lang: string = "por"): Promise<void> {

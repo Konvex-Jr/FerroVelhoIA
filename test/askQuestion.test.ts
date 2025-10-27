@@ -58,9 +58,8 @@ describe("AskQuestion use case", () => {
     });
 
     test("Deve gerar resposta para pergunta válida", async () => {
-        const input: AskQuestionInput = { 
+        const input: AskQuestionInput = {
             question: "Qual o impacto do ODS 4?",
-            mentorType: "GENERATIVO",
             userId: "user-1"
         };
         const output = await askQuestion.execute(input);
@@ -69,9 +68,8 @@ describe("AskQuestion use case", () => {
     });
 
     test("Deve falhar se o campo pergunta estiver vazio", async () => {
-        const input: AskQuestionInput = { 
+        const input: AskQuestionInput = {
             question: "",
-            mentorType: "GENERATIVO",
             userId: "user-1"
         };
         await expect(askQuestion.execute(input)).rejects.toThrow("O campo pergunta é obrigatório.");
@@ -80,7 +78,6 @@ describe("AskQuestion use case", () => {
     test("Deve falhar se PDF inválido for enviado", async () => {
         const input: AskQuestionInput = {
             question: "Pergunta qualquer",
-            mentorType: "REFLEXIVO",
             userId: "user-1",
             file: { mimetype: "text/plain", size: 500, buffer: Buffer.from("teste") } as any
         };
@@ -90,7 +87,6 @@ describe("AskQuestion use case", () => {
     test("Deve aceitar PDF válido", async () => {
         const input: AskQuestionInput = {
             question: "Pergunta com PDF",
-            mentorType: "REFLEXIVO",
             userId: "user-1",
             file: {
                 mimetype: "application/pdf",
@@ -108,7 +104,6 @@ describe("AskQuestion use case", () => {
     test("Deve salvar e recuperar histórico de mensagens", async () => {
         const input1: AskQuestionInput = {
             question: "Primeira pergunta",
-            mentorType: "GENERATIVO",
             userId: "user-2"
         };
 
@@ -117,7 +112,6 @@ describe("AskQuestion use case", () => {
 
         const input2: AskQuestionInput = {
             question: "Segunda pergunta",
-            mentorType: "GENERATIVO",
             userId: "user-2",
             conversationId
         };

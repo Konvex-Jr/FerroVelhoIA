@@ -4,10 +4,11 @@ import { TokenType } from "../Enums/TokenType";
 import RepositoryFactoryInterface from "../Interfaces/RepositoryFactoryInterface";
 import TokenRepositoryInterface from "../Interfaces/TokenRepositoryInterface";
 import Token from "../Entity/Token";
+import Conversation from "../Entity/Conversation";
 
 export default class GeminiChatService {
     private gemini: GoogleGenerativeAI;
-    private tokenRepository!: TokenRepositoryInterface;
+    private tokenRepository: TokenRepositoryInterface;
 
     constructor(
         repositoryFactory: RepositoryFactoryInterface,
@@ -18,7 +19,8 @@ export default class GeminiChatService {
             throw new Error("GEMINI_API_KEY não está definida nas variáveis de ambiente (.env)");
         }
 
-        this.gemini = new GoogleGenerativeAI(apiKey);
+        this.gemini = gemini || new GoogleGenerativeAI(apiKey);
+        this.tokenRepository = repositoryFactory.createTokenRepository();
 
     }
 
@@ -41,5 +43,14 @@ export default class GeminiChatService {
         await this.tokenRepository.create(token);
 
         return textResponse;
+    }
+
+    async chatWithConversation(
+        _conversation: Conversation,
+        model: ModelType,
+        systemPrompt: string,
+        userPrompt: string
+    ): Promise<string> {
+        return this.chatWithContext(model, systemPrompt, userPrompt);
     }
 }
