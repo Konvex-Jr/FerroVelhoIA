@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { OpenAI } from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import PostgreSQLConnection from "../infra/database/PostgreSQLConnection";
 import ConfigDatabase from "../infra/database/ConfigDatabase";
 import DatabaseRepositoryFactory from "../infra/repository/DatabaseRepositoryFactory";
@@ -18,13 +18,16 @@ async function main() {
         const inputFolder = process.argv[2] || "./docs";
         console.log("📂 Diretório de entrada:", inputFolder);
 
-        const openai = new OpenAI({
-            apiKey: process.env.GEMINI_API_KEY,
-        });
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error("GEMINI_API_KEY não está definida nas variáveis de ambiente (.env)");
+        }
+
+        const gemini = new GoogleGenerativeAI(apiKey);
 
         const connection = new PostgreSQLConnection(configDatabase);
         const repositoryFactory = new DatabaseRepositoryFactory(connection);
-        const importer = new ImportEmbeddings(repositoryFactory, openai);
+        const importer = new ImportEmbeddings(repositoryFactory, gemini);
 
         await importer.run(inputFolder);
 

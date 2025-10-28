@@ -52,7 +52,7 @@ async function bootstrap() {
     const router = new Router(http, repositoryFactory);
 
     router.init();
-    http.listen(5001);
+    http.listen(8000);
     console.log('Running...');
 }
 
