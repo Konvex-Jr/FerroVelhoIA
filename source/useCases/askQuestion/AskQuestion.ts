@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { ModelType } from "../../domain/Enums/ModelType";
 import { TokenType } from "../../domain/Enums/TokenType";
 import RepositoryFactoryInterface from "../../domain/Interfaces/RepositoryFactoryInterface";
@@ -8,52 +8,37 @@ import AskQuestionInput from "./AskQuestionInput";
 import AskQuestionOutput from "./AskQuestionOutput";
 import EmbeddingService from "../../domain/Services/EmbeddingService";
 import ChunkService from "../../domain/Services/ChunkService";
-import GeminiChatService from "../../domain/Services/GeminiChatService";
+import { systemPrompts } from "../../domain/Enums/SystemPrompts";
+import OpenAIChatService from "../../domain/Services/OpenAIChatService";
 import ChatHistoryService from "../../domain/Services/ChatHistoryService";
-import Conversation from "../../domain/Entity/Conversation";
-import { SYSTEM_PROMPT } from "../../domain/Enums/SystemPrompt";
-
-//@ts-ignore
 import removeStopwordsService from "../../domain/Services/removeStopwordsService";
 
 export default class AskQuestion {
-
     private repositoryFactory: RepositoryFactoryInterface;
     readonly tokenRepository: TokenRepositoryInterface;
     private embeddingService: EmbeddingService;
     private chunkService: ChunkService;
-    private chatService: GeminiChatService;
-    private chatHistoryService?: ChatHistoryService;
+    private chatService: OpenAIChatService;
+    private chatHistoryService: ChatHistoryService;
 
     constructor(
         repositoryFactory: RepositoryFactoryInterface,
         embeddingService?: EmbeddingService,
         chunkService?: ChunkService,
-        chatService?: GeminiChatService,
+        chatService?: OpenAIChatService,
         chatHistoryService?: ChatHistoryService
     ) {
         this.repositoryFactory = repositoryFactory;
         this.tokenRepository = repositoryFactory.createTokenRepository();
-        this.chatHistoryService = chatHistoryService;
-
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-        throw new Error("GEMINI_API_KEY não está definida nas variáveis de  ambiente (.env)");
-        }
-
-        const gemini = new GoogleGenerativeAI(apiKey);
-
-        this.embeddingService = embeddingService || new EmbeddingService(this.repositoryFactory, gemini);
-    
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        this.embeddingService = embeddingService || new EmbeddingService(this.repositoryFactory, openai);
         this.chunkService = chunkService || new ChunkService(this.repositoryFactory);
-    
-        this.chatService = chatService || new GeminiChatService(this.repositoryFactory, gemini);
-
+        this.chatHistoryService = chatHistoryService || new ChatHistoryService(this.repositoryFactory);
+        this.chatService = chatService || new OpenAIChatService(this.repositoryFactory, this.chatHistoryService, openai);
     }
 
     async execute(input: AskQuestionInput): Promise<AskQuestionOutput> {
         if (!input.question) throw new Error("O campo pergunta é obrigatório.");
-        let question = await removeStopwordsService(input.question, "porBr");
         let fileText = "";
         if (input.file) {
             const file = input.file as Express.Multer.File;
@@ -62,44 +47,42 @@ export default class AskQuestion {
             if (file.size > 1_000_000)
                 throw new Error("O arquivo PDF deve ter menos de 1MB.");
             fileText = await extractPdfText(file);
-            fileText = await removeStopwordsService(fileText, "porBr");
         }
-        const combinedText = [fileText, question].filter(Boolean).join(" ");
-        const queryEmbedding = await this.embeddingService.createEmbedding(combinedText, ModelType.PROMPT_MODEL, TokenType.INPUT);
+
+        const combinedText = [fileText, input.question].filter(Boolean).join(" ");
+        const cleanedText = await removeStopwordsService(combinedText, "porBr");
+
+        const queryEmbedding = await this.embeddingService.createEmbedding(
+            cleanedText,
+            ModelType.EMBEDDING_MODEL,
+            TokenType.INPUT
+        );
+
         const topChunks = await this.chunkService.findRelevantChunks(queryEmbedding);
+        const systemPrompt = systemPrompts[input.mentorType];
         const userPrompt = `
             Contexto:
             ${topChunks.map(c => c.chunk).join("\n\n")}
 
             Pergunta:
-            ${question}
+            ${input.question}
         `;
-        let conversation: Conversation | null = null;
-        if (this.chatHistoryService) {
-            if (input.conversationId) {
-                conversation = await this.chatHistoryService.getConversationById(input.conversationId);
-            }
-            if (!conversation) {
-                conversation = await this.chatHistoryService.createConversation(input.userId);
-            }
-        }
 
-        let answer: string;
-        const conversationAwareService = conversation && typeof (this.chatService as unknown as { chatWithConversation?: Function }).chatWithConversation === "function";
-
-        if (conversation && conversationAwareService) {
-            answer = await (this.chatService as unknown as { chatWithConversation: (conversation: Conversation, model: ModelType, systemPrompt: string, userPrompt: string) => Promise<string> })
-                .chatWithConversation(conversation, ModelType.PROMPT_MODEL, SYSTEM_PROMPT, userPrompt);
+        let conversation;
+        if (input.conversationId) {
+            conversation = await this.chatHistoryService.getConversationById(input.conversationId);
+            if (!conversation) throw new Error("Conversa não encontrada.");
         } else {
-            if (conversation && this.chatHistoryService) {
-                await this.chatHistoryService.addMessage(conversation.id, "user", question);
-            }
-            answer = await this.chatService.chatWithContext(ModelType.PROMPT_MODEL, SYSTEM_PROMPT, userPrompt);
-            if (conversation && this.chatHistoryService) {
-                await this.chatHistoryService.addMessage(conversation.id, "assistant", answer);
-            }
+            conversation = await this.chatHistoryService.createConversation(input.userId, `${input.userId}`);
         }
 
-        return { answer, conversationId: conversation ? conversation.id : (input.conversationId || "")};
+        const answer = await this.chatService.chatWithConversation(
+            conversation,
+            ModelType.PROMPT_MODEL,
+            systemPrompt,
+            userPrompt
+        );
+
+        return { answer, conversationId: conversation.id };
     }
 }

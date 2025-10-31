@@ -8,11 +8,11 @@ export default class ChunkRepositoryDatabase implements ChunkRepositoryInterface
     }
 
     async create(chunk: Chunk): Promise<Chunk | null> {
-        await this.connection.execute("insert into public.chunks (file_name, chunk, embedding, created_at, updated_at) values ($1, $2, $3, $4, $5);", [chunk.fileName, chunk.chunk, JSON.stringify(chunk.embedding), chunk.createdAt, chunk.updatedAt]);
+        await this.connection.execute("insert into chunks (file_name, chunk, embedding, created_at, updated_at) values ($1, $2, $3, $4, $5);", [chunk.fileName, chunk.chunk, JSON.stringify(chunk.embedding), chunk.createdAt, chunk.updatedAt]);
         return chunk;
     }
 
     async getAll(): Promise<Chunk[]> {
-        return await this.connection.execute("select * from public.chunks order by created_at")
+        return await this.connection.execute("select * from chunks order by created_at")
     }
 }

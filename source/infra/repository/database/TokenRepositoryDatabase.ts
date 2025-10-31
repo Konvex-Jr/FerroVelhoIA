@@ -8,11 +8,11 @@ export default class TokenRepositoryDatabase implements TokenRepositoryInterface
     }
 
     async create(token: Token): Promise<Token | null> {
-        await this.connection.execute("insert into public.tokens (model, type, amount, created_at) values ($1, $2, $3, $4);", [token.model, token.type, token.amount, token.createdAt]);
+        await this.connection.execute("insert into tokens (model, type, amount, created_at) values ($1, $2, $3, $4);", [token.model, token.type, token.amount, token.createdAt]);
         return token;
     }
 
     async getAll(): Promise<Token[]> {
-        return await this.connection.execute("select * from public.tokens order by created_at")
+        return await this.connection.execute("select * from tokens order by created_at")
     }
 }

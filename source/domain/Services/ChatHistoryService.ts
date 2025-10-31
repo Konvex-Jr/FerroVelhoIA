@@ -10,7 +10,7 @@ export default class ChatHistoryService {
         this.chatRepository = repositoryFactory.createConversationRepository();
     }
 
-    async createConversation(userId: string, title?: string): Promise<Conversation> {
+    async createConversation(userId: string, title: string): Promise<Conversation> {
         const conversation = new Conversation(userId, title);
         await this.chatRepository.create(conversation);
         return conversation;
