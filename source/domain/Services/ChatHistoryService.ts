@@ -24,7 +24,7 @@ export default class ChatHistoryService {
         return await this.chatRepository.findByUser(userId);
     }
 
-    async addMessage(conversationId: string, role: "system" | "user" | "assistant", content: string): Promise<Message> {
+    async addMessage(conversationId: string, role: "user" | "model", content: string): Promise<Message> {
         const messages = await this.chatRepository.getMessages(conversationId);
         const message = new Message(conversationId, role, content, messages.length);
         await this.chatRepository.addMessage(conversationId, message);

@@ -1,3 +1,5 @@
+// User.ts não será utilizado, visto que o usuário será identificado apenas com o id do whats (wa_id)
+
 import { v4 as uuid } from "uuid";
 
 export default class User {
