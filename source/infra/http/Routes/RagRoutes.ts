@@ -12,7 +12,7 @@ export default class RagRoutes implements ModelRoutes {
     }
 
     init(): void {
-        this.http.route("post", "/ask", true, async (params: any, body: any) => {
+        this.http.route("post", "/ask", false, async (params: any, body: any) => {
             return await this.ragController.askQuestion(body);
         });
     }

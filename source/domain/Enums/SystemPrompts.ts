@@ -25,3 +25,5 @@ Não invente dados.
 Ademais, responda no idioma de entrada e tente fazer respostas mais curtas.
   `.trim(),
 } as const;
+
+// #TODO: Trocar o prompt

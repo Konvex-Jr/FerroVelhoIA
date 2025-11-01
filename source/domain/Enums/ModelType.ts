@@ -1,4 +1,6 @@
 export enum ModelType {
-    PROMPT_MODEL = "gpt-4o-mini",
-    EMBEDDING_MODEL='text-embedding-3-small'
+  PROMPT_MODEL = "gemini-2.5-flash",
+  EMBEDDING_MODEL = "embedding-001"
 }
+
+// #TODO: Trocar o modelo pra GEMINI e a chave API no .env

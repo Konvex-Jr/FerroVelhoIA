@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ModelType } from "../../domain/Enums/ModelType";
 import { TokenType } from "../../domain/Enums/TokenType";
 import RepositoryFactoryInterface from "../../domain/Interfaces/RepositoryFactoryInterface";
@@ -9,9 +9,11 @@ import AskQuestionOutput from "./AskQuestionOutput";
 import EmbeddingService from "../../domain/Services/EmbeddingService";
 import ChunkService from "../../domain/Services/ChunkService";
 import { systemPrompts } from "../../domain/Enums/SystemPrompts";
-import OpenAIChatService from "../../domain/Services/OpenAIChatService";
+import GeminiChatService from "../../domain/Services/GeminiChatService";
 import ChatHistoryService from "../../domain/Services/ChatHistoryService";
 import removeStopwordsService from "../../domain/Services/removeStopwordsService";
+
+// #TODO: trocar as funções aqui
 
 export default class AskQuestion {
     private repositoryFactory: RepositoryFactoryInterface;

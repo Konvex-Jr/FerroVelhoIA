@@ -5,3 +5,5 @@ export default interface AskQuestionInput {
     conversationId?: string;
     file?: Express.Multer.File;
 }
+
+//#TODO: remover mentorType
