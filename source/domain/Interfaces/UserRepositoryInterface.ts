@@ -1,3 +1,4 @@
+/*
 import User from "../Entity/User";
 
 export default interface UserRepositoryInterface {
@@ -7,3 +8,4 @@ export default interface UserRepositoryInterface {
     findByEmail(email: string): Promise<User | null>;
     update(user: User): Promise<User>;
 }
+*/

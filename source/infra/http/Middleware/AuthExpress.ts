@@ -1,3 +1,4 @@
+/*
 import { verify } from "jsonwebtoken";
 import Auth from "./Auth";
 import { readFileSync } from "fs";
@@ -33,3 +34,4 @@ export default class ExpressAuth implements Auth {
     }
 
 }
+*/

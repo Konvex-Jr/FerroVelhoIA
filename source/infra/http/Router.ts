@@ -1,18 +1,18 @@
 import RepositoryFactoryInterface from "../../domain/Interfaces/RepositoryFactoryInterface";
 import Http from "./Http";
-import FeedbackRoutes from "./Routes/FeedbackRoutes";
+// import FeedbackRoutes from "./Routes/FeedbackRoutes";
 import RagRoutes from "./Routes/RagRoutes";
-import UserRoutes from "./Routes/UserRoutes";
+// import UserRoutes from "./Routes/UserRoutes";
 export default class Router {
 
-	protected userRoutes: UserRoutes;
+	// protected userRoutes: UserRoutes;
 	protected ragRouter: RagRoutes;
-	protected feedbackRouter: FeedbackRoutes;
+	// protected feedbackRouter: FeedbackRoutes;
 
 	constructor(readonly http: Http, readonly repositoryFactory: RepositoryFactoryInterface) {
-		this.userRoutes = new UserRoutes(this.http, this.repositoryFactory);
+		// this.userRoutes = new UserRoutes(this.http, this.repositoryFactory);
 		this.ragRouter = new RagRoutes(this.http, this.repositoryFactory);
-		this.feedbackRouter = new FeedbackRoutes(this.http, this.repositoryFactory);
+		// this.feedbackRouter = new FeedbackRoutes(this.http, this.repositoryFactory);
 	}
 
 	init() {
@@ -21,8 +21,8 @@ export default class Router {
 				message: "welcome"
 			}
 		});
-		this.userRoutes.init();
+		// this.userRoutes.init();
 		this.ragRouter.init();
-		this.feedbackRouter.init();
+		// this.feedbackRouter.init();
 	}
 }

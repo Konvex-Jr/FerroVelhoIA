@@ -1,5 +1,5 @@
-import CreateFeedbackInput from "./CreateFeedbackInput";
+// import CreateFeedbackInput from "./CreateFeedbackInput";
 
-export interface CreateFeedbackOutput {
-    execute(input: CreateFeedbackInput): Promise<void>;
-}
+// export interface CreateFeedbackOutput {
+//     execute(input: CreateFeedbackInput): Promise<void>;
+// }

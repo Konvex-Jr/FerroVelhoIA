@@ -1,5 +1,5 @@
-export default interface LoginUserOutput {
+// export default interface LoginUserOutput {
 
-    accessToken: string;
+//     accessToken: string;
 
-} 
+// } 

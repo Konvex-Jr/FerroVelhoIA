@@ -1,3 +1,4 @@
+/*
 import { hash } from "bcrypt";
 import { sign } from "jsonwebtoken";
 import { readFileSync } from "fs";
@@ -35,3 +36,4 @@ export default class CreateUser {
     }
 
 }
+    */

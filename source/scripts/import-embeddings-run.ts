@@ -1,5 +1,4 @@
 import "dotenv/config";
-import { OpenAI } from "openai";
 import PostgreSQLConnection from "../infra/database/PostgreSQLConnection";
 import ConfigDatabase from "../infra/database/ConfigDatabase";
 import DatabaseRepositoryFactory from "../infra/repository/DatabaseRepositoryFactory";
@@ -18,13 +17,10 @@ async function main() {
         const inputFolder = process.argv[2] || "./docs";
         console.log("📂 Diretório de entrada:", inputFolder);
 
-        const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
-
         const connection = new PostgreSQLConnection(configDatabase);
         const repositoryFactory = new DatabaseRepositoryFactory(connection);
-        const importer = new ImportEmbeddings(repositoryFactory, openai);
+        
+        const importer = new ImportEmbeddings(repositoryFactory);
 
         await importer.run(inputFolder);
 

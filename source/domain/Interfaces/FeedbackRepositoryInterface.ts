@@ -1,6 +1,6 @@
-import Feedback from "../Entity/Feedback";
+// import Feedback from "../Entity/Feedback";
 
-export default interface FeedbackRepositoryInterface {
-    create(feedback: Feedback): Promise<void>;
-    getAll(): Promise<Feedback[]>;
-}
+// export default interface FeedbackRepositoryInterface {
+//     create(feedback: Feedback): Promise<void>;
+//     getAll(): Promise<Feedback[]>;
+// }
