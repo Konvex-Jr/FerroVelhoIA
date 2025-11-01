@@ -28,11 +28,10 @@ export default class GeminiChatService {
 
     if (!embedding) throw new Error("Falha ao gerar embedding");
 
-    const { totalTokens } = await modelInstance.countTokens(text);
     const token = new Token(
       ModelType.EMBEDDING_MODEL,
       TokenType.EMBEDDING,
-      totalTokens || 0
+      0
     );
     await this.tokenRepository.create(token);
 

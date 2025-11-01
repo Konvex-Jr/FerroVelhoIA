@@ -7,7 +7,7 @@ export default class CreateConversationsTable {
         await this.connection.execute(`
             CREATE TABLE IF NOT EXISTS public.conversations (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                user_id UUID NOT NULL,
+                user_id TEXT NOT NULL,
                 title TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

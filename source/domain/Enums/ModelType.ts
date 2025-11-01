@@ -1,4 +1,4 @@
 export enum ModelType {
-  PROMPT_MODEL = "gemini-1.5-flash",
-  EMBEDDING_MODEL = "text-embedding-004"
+  PROMPT_MODEL = "gemini-2.5-flash",
+  EMBEDDING_MODEL = "gemini-embedding-001"
 }
