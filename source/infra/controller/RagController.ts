@@ -5,11 +5,10 @@ import AskQuestionOutput from "../../useCases/askQuestion/AskQuestionOutput";
 
 export default class RagController {
 
-    constructor(protected repositoryFactory: RepositoryFactoryInterface) {
+    constructor(protected askQuestionUseCase: AskQuestion) {
     }
 
     async askQuestion(input: AskQuestionInput): Promise<AskQuestionOutput> {
-        const askQuestion = new AskQuestion(this.repositoryFactory);
-        return await askQuestion.execute(input);
+        return await this.askQuestionUseCase.execute(input);
     }
 }
