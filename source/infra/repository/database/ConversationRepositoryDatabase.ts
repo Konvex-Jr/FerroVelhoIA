@@ -8,14 +8,14 @@ export default class ConversationRepositoryDatabase implements ConversationRepos
 
     async create(conversation: Conversation): Promise<void> {
         await this.connection.execute(
-            "INSERT INTO public.conversations (id, user_id, title, created_at, updated_at) VALUES ($1, $2, $3, $4, $5);",
-            [conversation.id, conversation.userId, conversation.title, new Date(), new Date()]
+            "INSERT INTO conversations (id, user_id, created_at, updated_at) VALUES ($1, $2, $3, $4);",
+            [conversation.id, conversation.userId, new Date(), new Date()]
         );
     }
 
     async findByUser(userId: string): Promise<Conversation[]> {
         const rows = await this.connection.execute(
-            "SELECT * FROM public.conversations WHERE user_id = $1 ORDER BY created_at ASC;",
+            "SELECT * FROM conversations WHERE user_id = $1 ORDER BY created_at ASC;",
             [userId]
         );
         return rows.map((r: any) => new Conversation(r.user_id, r.title, r.id));
@@ -23,7 +23,7 @@ export default class ConversationRepositoryDatabase implements ConversationRepos
 
     async findById(id: string): Promise<Conversation | null> {
         const rows = await this.connection.execute(
-            "SELECT * FROM public.conversations WHERE id = $1;",
+            "SELECT * FROM conversations WHERE id = $1;",
             [id]
         );
         if (!rows.length) return null;
@@ -33,14 +33,14 @@ export default class ConversationRepositoryDatabase implements ConversationRepos
 
     async addMessage(conversationId: string, message: Message): Promise<void> {
         await this.connection.execute(
-            "INSERT INTO public.messages (id, conversation_id, role, content, order_index, created_at) VALUES ($1, $2, $3, $4, $5, $6);",
+            "INSERT INTO messages (id, conversation_id, role, content, order_index, created_at) VALUES ($1, $2, $3, $4, $5, $6);",
             [message.id, conversationId, message.role, message.content, message.orderIndex, message.createdAt]
         );
     }
 
     async getMessages(conversationId: string): Promise<Message[]> {
         const rows = await this.connection.execute(
-            "SELECT * FROM public.messages WHERE conversation_id = $1 ORDER BY order_index ASC;",
+            "SELECT * FROM messages WHERE conversation_id = $1 ORDER BY order_index ASC;",
             [conversationId]
         );
         return rows.map((r: any) => new Message(r.conversation_id, r.role, r.content, r.order_index, r.id, r.created_at));

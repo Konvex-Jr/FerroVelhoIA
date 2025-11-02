@@ -1,3 +1,4 @@
+/*
 import { verify } from "jsonwebtoken";
 import Auth from "./Auth";
 import { readFileSync } from "fs";
@@ -21,7 +22,7 @@ export default class ExpressAuth implements Auth {
         const token = request.headers['access-token'];
         try {
             const publicKey = readFileSync('./public.key', 'utf8');
-            const data = verify(token, publicKey, { algorithms: ["RS256"] }); // @ts-ignore
+            const data = verify(token, publicKey, { algorithms: ["RS256"] }) as { userId: string };
             const user = await this.userRepository.findById(data.userId);
             request.body.user = user;
             return next();
@@ -33,3 +34,4 @@ export default class ExpressAuth implements Auth {
     }
 
 }
+*/

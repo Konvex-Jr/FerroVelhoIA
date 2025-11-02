@@ -1,3 +1,3 @@
-export default interface CreateUserOutput {
-    accessToken: string;
-}
+// export default interface CreateUserOutput {
+//     accessToken: string;
+// }

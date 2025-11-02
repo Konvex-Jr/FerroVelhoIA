@@ -1,21 +1,15 @@
 import { ModelType } from "../source/domain/Enums/ModelType";
-import { TokenType } from "../source/domain/Enums/TokenType";
 import RepositoryFactoryInterface from "../source/domain/Interfaces/RepositoryFactoryInterface";
 import MemoryRepositoryFactory from "../source/infra/repository/MemoryRepositoryFactory";
 import AskQuestion from "../source/useCases/askQuestion/AskQuestion";
 import AskQuestionInput from "../source/useCases/askQuestion/AskQuestionInput";
 import 'dotenv/config';
 import ChatHistoryService from '../source/domain/Services/ChatHistoryService';
+import Conversation from "../source/domain/Entity/Conversation"; // Adicionado para tipagem
 
 jest.mock('../source/domain/Services/extractTextFromPDF', () => ({
     extractPdfText: jest.fn().mockResolvedValue('Texto extraído do PDF'),
 }));
-
-class MockEmbeddingService {
-    async createEmbedding(text: string, model: ModelType, tokenType: TokenType) {
-        return [0.1, 0.2, 0.3];
-    }
-}
 
 class MockChunkService {
     async findRelevantChunks(embedding: number[]) {
@@ -29,10 +23,15 @@ class MockChatService {
         this.chatHistoryService = chatHistoryService;
     }
 
-    async chatWithConversation(conversation: any, model: ModelType, systemPrompt: string, userPrompt: string) {
+    async generateEmbedding(text: string): Promise<number[]> {
+        return [0.1, 0.2, 0.3];
+    }
+
+    async chatWithConversation(conversation: Conversation, model: ModelType, systemPrompt: string, userPrompt: string) {
         await this.chatHistoryService.addMessage(conversation.id, "user", userPrompt);
         const simulatedAnswer = "Resposta simulada";
-        await this.chatHistoryService.addMessage(conversation.id, "assistant", simulatedAnswer);
+        
+        await this.chatHistoryService.addMessage(conversation.id, "model", simulatedAnswer);
         return simulatedAnswer;
     }
 }
@@ -49,7 +48,6 @@ describe("AskQuestion use case", () => {
 
         askQuestion = new AskQuestion(
             repositoryFactory,
-            new MockEmbeddingService() as any,
             new MockChunkService() as any,
             mockChatService as any,
             chatHistoryService
@@ -59,7 +57,7 @@ describe("AskQuestion use case", () => {
     test("Deve gerar resposta para pergunta válida", async () => {
         const input: AskQuestionInput = {
             question: "Qual o impacto do ODS 4?",
-            userId: "user-1"
+            userId: "user-1",
         };
         const output = await askQuestion.execute(input);
         expect(output.answer).toBe("Resposta simulada");
@@ -121,8 +119,8 @@ describe("AskQuestion use case", () => {
 
         expect(history.length).toBe(4);
         expect(history[0].role).toBe("user");
-        expect(history[1].role).toBe("assistant");
+        expect(history[1].role).toBe("model");
         expect(history[2].role).toBe("user");
-        expect(history[3].role).toBe("assistant");
+        expect(history[3].role).toBe("model");
     });
 });

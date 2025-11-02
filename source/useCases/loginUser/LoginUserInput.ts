@@ -1,6 +1,6 @@
-export default interface LoginUserInput {
+// export default interface LoginUserInput {
 
-    email: string;
-    password: string;
+//     email: string;
+//     password: string;
 
-}
+// }
