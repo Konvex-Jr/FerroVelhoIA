@@ -8,7 +8,6 @@ import CreateTokensTable from "./infra/migrations/02.create_tokens_table";
 import CreateChunksTable from "./infra/migrations/03.create_chunks_table";
 import CreateMessagesTable from "./infra/migrations/05.create_messages_table";
 import CreateConversationsTable from "./infra/migrations/04.create_conversations_table";
-// import CreateFeedbacksTable from "./infra/migrations/06.create_feedbacks_table";
 
 config();
 
@@ -22,11 +21,7 @@ async function bootstrap() {
     });
 
     try {
-        /*
-        const usersMigration = new CreateUsersTable(connection);
-        await usersMigration.up();
-        console.log("Migration 'users' executada com sucesso!");
-        */
+
 
         const tokensMigration = new CreateTokensTable(connection);
         await tokensMigration.up();
@@ -43,10 +38,6 @@ async function bootstrap() {
         const messagesMigration = new CreateMessagesTable(connection);
         await messagesMigration.up();
         console.log("Migration 'messages' executada com sucesso!");
-
-        // const feedbacksMigration = new CreateFeedbacksTable(connection);
-        // await feedbacksMigration.up();
-        // console.log("Migration 'feedbacks' executada com sucesso!");
 
     } catch (err) {
         console.error("Erro ao rodar as migrations:", err);
