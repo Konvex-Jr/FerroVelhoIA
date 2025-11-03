@@ -31,7 +31,6 @@ export default class ImportEmbeddings {
         if (!apiKey) throw new Error("GEMINI_API_KEY não definida");
         const gemini = new GoogleGenerativeAI(apiKey);
         
-        // CORREÇÃO: Usar o PROMPT_MODEL para countTokens, pois o embedding model não suporta
         this.model = gemini.getGenerativeModel({ model: ModelType.PROMPT_MODEL });
     }
 
@@ -42,7 +41,6 @@ export default class ImportEmbeddings {
             fs.mkdirSync(resolvedPath, { recursive: true });
         }
 
-        // MUDANÇA AQUI: Removido o filtro ".pdf"
         const files = fs
             .readdirSync(resolvedPath)
             .filter((f) => f.endsWith(".txt") || f.endsWith(".docx"));
@@ -57,11 +55,10 @@ export default class ImportEmbeddings {
 
             let text = "";
             try {
-                // MUDANÇA AQUI: Removido o 'if' para '.pdf'
                 if (fileName.endsWith(".docx")) {
                     const result = await mammoth.extractRawText({ buffer });
                     text = result.value || "";
-                } else { // Isso agora pega o '.txt'
+                } else {
                     text = buffer.toString("utf-8");
                 }
             } catch { continue; }
