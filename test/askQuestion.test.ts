@@ -7,10 +7,6 @@ import 'dotenv/config';
 import ChatHistoryService from '../source/domain/Services/ChatHistoryService';
 import Conversation from "../source/domain/Entity/Conversation"; // Adicionado para tipagem
 
-jest.mock('../source/domain/Services/extractTextFromPDF', () => ({
-    extractPdfText: jest.fn().mockResolvedValue('Texto extraído do PDF'),
-}));
-
 class MockChunkService {
     async findRelevantChunks(embedding: number[]) {
         return [{ chunk: "Chunk 1" }, { chunk: "Chunk 2" }];
@@ -70,32 +66,6 @@ describe("AskQuestion use case", () => {
             userId: "user-1"
         };
         await expect(askQuestion.execute(input)).rejects.toThrow("O campo pergunta é obrigatório.");
-    });
-
-    test("Deve falhar se PDF inválido for enviado", async () => {
-        const input: AskQuestionInput = {
-            question: "Pergunta qualquer",
-            userId: "user-1",
-            file: { mimetype: "text/plain", size: 500, buffer: Buffer.from("teste") } as any
-        };
-        await expect(askQuestion.execute(input)).rejects.toThrow("Formato inválido. Apenas PDF é aceito.");
-    });
-
-    test("Deve aceitar PDF válido", async () => {
-        const input: AskQuestionInput = {
-            question: "Pergunta com PDF",
-            userId: "user-1",
-            file: {
-                mimetype: "application/pdf",
-                size: 500,
-                originalname: "teste.pdf",
-                buffer: Buffer.from("%PDF-1.4 fake content", "utf-8")
-            } as Express.Multer.File
-        };
-
-        const output = await askQuestion.execute(input);
-        expect(output.answer).toBe("Resposta simulada");
-        expect(output.conversationId).toBeDefined();
     });
 
     test("Deve salvar e recuperar histórico de mensagens", async () => {

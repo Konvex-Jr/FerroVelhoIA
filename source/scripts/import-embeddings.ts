@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import pdf from "pdf-parse";
+// import pdf from "pdf-parse"; // REMOVIDO
 import mammoth from "mammoth";
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import RepositoryFactoryInterface from "../domain/Interfaces/RepositoryFactoryInterface";
@@ -30,7 +30,9 @@ export default class ImportEmbeddings {
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) throw new Error("GEMINI_API_KEY não definida");
         const gemini = new GoogleGenerativeAI(apiKey);
-        this.model = gemini.getGenerativeModel({ model: ModelType.EMBEDDING_MODEL });
+        
+        // CORREÇÃO: Usar o PROMPT_MODEL para countTokens, pois o embedding model não suporta
+        this.model = gemini.getGenerativeModel({ model: ModelType.PROMPT_MODEL });
     }
 
     async run(inputFolder: string = "./docs", lang: string = "por"): Promise<void> {
@@ -40,9 +42,10 @@ export default class ImportEmbeddings {
             fs.mkdirSync(resolvedPath, { recursive: true });
         }
 
+        // MUDANÇA AQUI: Removido o filtro ".pdf"
         const files = fs
             .readdirSync(resolvedPath)
-            .filter((f) => f.endsWith(".pdf") || f.endsWith(".txt") || f.endsWith(".docx"));
+            .filter((f) => f.endsWith(".txt") || f.endsWith(".docx"));
 
         if (files.length === 0) return;
 
@@ -54,13 +57,11 @@ export default class ImportEmbeddings {
 
             let text = "";
             try {
-                if (fileName.endsWith(".pdf")) {
-                    const data = await pdf(buffer);
-                    text = data.text || "";
-                } else if (fileName.endsWith(".docx")) {
+                // MUDANÇA AQUI: Removido o 'if' para '.pdf'
+                if (fileName.endsWith(".docx")) {
                     const result = await mammoth.extractRawText({ buffer });
                     text = result.value || "";
-                } else {
+                } else { // Isso agora pega o '.txt'
                     text = buffer.toString("utf-8");
                 }
             } catch { continue; }

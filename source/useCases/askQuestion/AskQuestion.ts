@@ -2,7 +2,6 @@ import { ModelType } from "../../domain/Enums/ModelType";
 import { TokenType } from "../../domain/Enums/TokenType";
 import RepositoryFactoryInterface from "../../domain/Interfaces/RepositoryFactoryInterface";
 import TokenRepositoryInterface from "../../domain/Interfaces/TokenRepositoryInterface";
-import { extractPdfText } from "../../domain/Services/extractTextFromPDF";
 import AskQuestionInput from "./AskQuestionInput";
 import AskQuestionOutput from "./AskQuestionOutput";
 import ChunkService from "../../domain/Services/ChunkService";
@@ -35,18 +34,8 @@ export default class AskQuestion {
 
     async execute(input: AskQuestionInput): Promise<AskQuestionOutput> {
         if (!input.question) throw new Error("O campo pergunta é obrigatório.");
-        
-        let fileText = "";
-        if (input.file) {
-            const file = input.file as Express.Multer.File;
-            if (file.mimetype !== "application/pdf")
-                throw new Error("Formato inválido. Apenas PDF é aceito.");
-            if (file.size > 1_000_000)
-                throw new Error("O arquivo PDF deve ter menos de 1MB.");
-            fileText = await extractPdfText(file);
-        }
 
-        const combinedText = [fileText, input.question].filter(Boolean).join(" ");
+        const combinedText = input.question;
         const cleanedText = await removeStopwordsService(combinedText, "porBr");
 
         const queryEmbedding = await this.chatService.generateEmbedding(
