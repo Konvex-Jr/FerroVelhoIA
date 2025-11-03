@@ -1,63 +1,64 @@
-import { Router as ExpressRouter, Request, Response } from "express";
-import Router from "../Router";
-import RepositoryFactoryInterface from "../../../domain/Interfaces/RepositoryFactoryInterface";
-import PostgreSQLConnection from "../../database/PostgreSQLConnection";
+// source/infra/http/Routes/TinyRoutes.ts
 import TinyClient from "../../clients/TinyClient";
+import Connection from "../../database/Connection";
 import ImportAllProducts from "../../../useCases/tiny/ImportAllProducts";
 import ApplyTinyDeltaUpdates from "../../../useCases/tiny/ApplyTinyDeltaUpdates";
+import ApplyTinyPaginationSync from "../../../useCases/tiny/ApplyTinyPaginationSync";
+
+type AnyHttp = any;
 
 export default class TinyRoutes {
-  constructor(private router: Router, private repositoryFactory: RepositoryFactoryInterface) {}
+  private app: any;
+  private connection: Connection;
+  private tiny: TinyClient;
 
-  init(express: ExpressRouter) {
-    // Importação manual completa (one-shot)
-    express.post("/tiny/import-all", async (req: Request, res: Response) => {
+  constructor(httpOrApp: AnyHttp, connection: Connection) {
+    // tenta extrair a instância do Express de várias formas comuns
+    const candidate =
+      httpOrApp?.app ??
+      httpOrApp?.express ??
+      (typeof httpOrApp?.getApp === "function" ? httpOrApp.getApp() : undefined) ??
+      httpOrApp;
+
+    if (!candidate || typeof candidate.post !== "function") {
+      throw new Error(
+        "TinyRoutes: Express app não encontrado. Forneça o app (ou um wrapper com .app/.express/.getApp())."
+      );
+    }
+
+    this.app = candidate;
+    this.connection = connection;
+    this.tiny = new TinyClient(process.env.TINY_API_TOKEN || "");
+  }
+
+  init() {
+    // Importa TODO o catálogo (censo inicial)
+    this.app.post("/tiny/import-all", async (_req: any, res: any) => {
       try {
-        const conn = (this.repositoryFactory as any).connection as PostgreSQLConnection;
-        const tiny = new TinyClient(process.env.TINY_API_TOKEN || "");
-        await new ImportAllProducts(conn, tiny).run();
+        await new ImportAllProducts(this.connection, this.tiny).run();
         res.status(200).json({ ok: true });
-      } catch (err: any) {
-        res.status(500).json({ ok: false, error: err?.message || String(err) });
+      } catch (e: any) {
+        res.status(500).json({ ok: false, error: e?.message ?? String(e) });
       }
     });
 
-    // Aplicar deltas (produtos alterados + atualizações de estoque)
-    express.post("/tiny/apply-deltas", async (req: Request, res: Response) => {
+    // Aplica DELTAS (usa endpoints de alterações do Tiny)
+    this.app.post("/tiny/apply-deltas", async (_req: any, res: any) => {
       try {
-        const conn = (this.repositoryFactory as any).connection as PostgreSQLConnection;
-        const tiny = new TinyClient(process.env.TINY_API_TOKEN || "");
-        await new ApplyTinyDeltaUpdates(conn, tiny).run();
+        await new ApplyTinyDeltaUpdates(this.connection, this.tiny).run();
         res.status(200).json({ ok: true });
-      } catch (err: any) {
-        res.status(500).json({ ok: false, error: err?.message || String(err) });
+      } catch (e: any) {
+        res.status(500).json({ ok: false, error: e?.message ?? String(e) });
       }
     });
 
-    // Webhook para atualização de estoque (configure no Tiny)
-    express.post("/webhooks/tiny/stock", async (req: Request, res: Response) => {
+    // FALLBACK por paginação (quando não há deltas/estoque habilitado)
+    this.app.post("/tiny/apply-fallback", async (_req: any, res: any) => {
       try {
-        const conn = (this.repositoryFactory as any).connection as PostgreSQLConnection;
-        const tiny = new TinyClient(process.env.TINY_API_TOKEN || "");
-        const { productId } = (req.body || {}) as any;
-        if (!productId) return res.status(400).json({ ok: false, error: "productId ausente" });
-        // Reconsulta o estoque detalhado e aplica
-        const detail = await tiny.getProductStock(productId);
-        const deposits = (detail as any).retorno?.produto?.depositos || [];
-        // upsert
-        for (const d of deposits) {
-          const dep = d.deposito || d;
-          await conn.execute(
-            `INSERT INTO public.tiny_product_stock (product_id, deposit_code, deposit_name, quantity, updated_at)
-             VALUES ($1,$2,$3,$4,NOW())
-             ON CONFLICT (product_id, deposit_code) DO UPDATE SET
-               deposit_name=EXCLUDED.deposit_name, quantity=EXCLUDED.quantity, updated_at=NOW();`,
-            [productId, String(dep.id ?? dep.codigo ?? dep.nome ?? "default"), dep.nome ?? null, dep.saldo ?? dep.quantidade ?? 0]
-          );
-        }
+        await new ApplyTinyPaginationSync(this.connection, this.tiny).run();
         res.status(200).json({ ok: true });
-      } catch (err: any) {
-        res.status(500).json({ ok: false, error: err?.message || String(err) });
+      } catch (e: any) {
+        res.status(500).json({ ok: false, error: e?.message ?? String(e) });
       }
     });
   }

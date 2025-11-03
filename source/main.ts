@@ -5,17 +5,18 @@ import ExpressHttp from "./infra/http/ExpressHttp";
 import Router from "./infra/http/Router";
 import DatabaseRepositoryFactory from "./infra/repository/DatabaseRepositoryFactory";
 
+// Migrations
 import CreateTokensTable from "./infra/migrations/02.create_tokens_table";
 import CreateChunksTable from "./infra/migrations/03.create_chunks_table";
-import CreateMessagesTable from "./infra/migrations/05.create_messages_table";
 import CreateConversationsTable from "./infra/migrations/04.create_conversations_table";
+import CreateMessagesTable from "./infra/migrations/05.create_messages_table";
+// import CreateFeedbacksTable from "./infra/migrations/06.create_feedbacks_table";
 
+// Tiny
 import CreateTinyProductsTable from "./infra/migrations/07.create_tiny_products_table";
 import CreateTinyProductStockTable from "./infra/migrations/08.create_tiny_product_stock_table";
 import CreateTinySyncStateTable from "./infra/migrations/09.create_tiny_sync_state_table";
-
 import TinyRoutes from "./infra/http/Routes/TinyRoutes"; 
-
 config();
 
 async function bootstrap() {
@@ -28,30 +29,15 @@ async function bootstrap() {
   });
 
   try {
-    const tokensMigration = new CreateTokensTable(connection);
-    await tokensMigration.up();
-    console.log("Migration 'tokens' executada com sucesso!");
-
-    const chunksMigration = new CreateChunksTable(connection);
-    await chunksMigration.up();
-    console.log("Migration 'chunks' executada com sucesso!");
-
-    const conversationsMigration = new CreateConversationsTable(connection);
-    await conversationsMigration.up();
-    console.log("Migration 'conversations' executada com sucesso!");
-
-    const messagesMigration = new CreateMessagesTable(connection);
-    await messagesMigration.up();
-    console.log("Migration 'messages' executada com sucesso!");
+    await new CreateTokensTable(connection).up();
+    await new CreateChunksTable(connection).up();
+    await new CreateConversationsTable(connection).up();
+    await new CreateMessagesTable(connection).up();
+    // await new CreateFeedbacksTable(connection).up();
 
     await new CreateTinyProductsTable(connection).up();
-    console.log("Migration 'tiny_products' executada com sucesso!");
-
     await new CreateTinyProductStockTable(connection).up();
-    console.log("Migration 'tiny_product_stock' executada com sucesso!");
-
     await new CreateTinySyncStateTable(connection).up();
-    console.log("Migration 'tiny_sync_state' executada com sucesso!");
   } catch (err) {
     console.error("Erro ao rodar as migrations:", err);
   }
@@ -62,10 +48,11 @@ async function bootstrap() {
 
   router.init();
 
-  new TinyRoutes(router, repositoryFactory).init((http as any).express);
+  new TinyRoutes(http, connection).init();
 
-  http.listen(5001);
-  console.log("Running...");
+  const port = Number(process.env.PORT ?? 5001);
+  http.listen(port);
+  console.log(`Running on port ${port} (NODE_ENV=${process.env.NODE_ENV ?? "development"})`);
 }
 
 bootstrap();
