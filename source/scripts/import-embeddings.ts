@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-// import pdf from "pdf-parse"; // REMOVIDO
 import mammoth from "mammoth";
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import RepositoryFactoryInterface from "../domain/Interfaces/RepositoryFactoryInterface";
@@ -8,9 +7,10 @@ import ChunkRepositoryInterface from "../domain/Interfaces/ChunkRepositoryInterf
 import { ModelType } from "../domain/Enums/ModelType";
 import { cosineSimilarity } from "../domain/Services/CosineSimilarity";
 import RemoveStopWordsService from "../domain/Services/removeStopwordsService";
-import GeminiChatService from "../domain/Services/GeminiChatService"; 
-import ChatHistoryService from "../domain/Services/ChatHistoryService"; 
+import GeminiChatService from "../domain/Services/GeminiChatService";
+import ChatHistoryService from "../domain/Services/ChatHistoryService";
 import Chunk from "../domain/Entity/Chunk";
+import TinyClientService from "../infra/clients/TinyClient"
 
 export default class ImportEmbeddings {
     private repositoryFactory: RepositoryFactoryInterface;
@@ -25,12 +25,13 @@ export default class ImportEmbeddings {
         this.chunkRepository = repositoryFactory.createChunkRepository();
 
         const chatHistoryService = new ChatHistoryService(repositoryFactory);
-        this.chatService = new GeminiChatService(repositoryFactory, chatHistoryService);
+        const tinyClient = new TinyClientService(process.env.TINY_API_TOKEN || '')
+        this.chatService = new GeminiChatService(repositoryFactory, chatHistoryService, tinyClient);
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) throw new Error("GEMINI_API_KEY não definida");
         const gemini = new GoogleGenerativeAI(apiKey);
-        
+
         this.model = gemini.getGenerativeModel({ model: ModelType.PROMPT_MODEL });
     }
 
@@ -62,12 +63,12 @@ export default class ImportEmbeddings {
                     text = buffer.toString("utf-8");
                 }
             } catch { continue; }
-            
+
             if (!text.trim()) continue;
-            
+
             const cleanedText = await RemoveStopWordsService(text, lang);
             const paragraphs = this.splitIntoParagraphs(cleanedText);
-            
+
             const chunks = await this.splitIntoChunks(paragraphs, 500);
 
             const existingChunks = await this.chunkRepository.getAll();

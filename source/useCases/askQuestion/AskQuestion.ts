@@ -1,5 +1,4 @@
 import { ModelType } from "../../domain/Enums/ModelType";
-import { TokenType } from "../../domain/Enums/TokenType";
 import RepositoryFactoryInterface from "../../domain/Interfaces/RepositoryFactoryInterface";
 import TokenRepositoryInterface from "../../domain/Interfaces/TokenRepositoryInterface";
 import AskQuestionInput from "./AskQuestionInput";
@@ -9,6 +8,7 @@ import { SYSTEM_PROMPT } from "../../domain/Enums/SystemPrompts";
 import GeminiChatService from "../../domain/Services/GeminiChatService";
 import ChatHistoryService from "../../domain/Services/ChatHistoryService";
 import removeStopwordsService from "../../domain/Services/removeStopwordsService";
+import TinyClientService from "../../infra/clients/TinyClient"; 
 
 export default class AskQuestion {
     private repositoryFactory: RepositoryFactoryInterface;
@@ -16,34 +16,39 @@ export default class AskQuestion {
     private chunkService: ChunkService;
     private chatService: GeminiChatService;
     private chatHistoryService: ChatHistoryService;
+    private tinyClient: TinyClientService; 
 
     constructor(
         repositoryFactory: RepositoryFactoryInterface,
         chunkService?: ChunkService,
         chatService?: GeminiChatService,
-        chatHistoryService?: ChatHistoryService
+        chatHistoryService?: ChatHistoryService,
+        
+        tinyClient?: TinyClientService 
     ) {
         this.repositoryFactory = repositoryFactory;
         this.tokenRepository = repositoryFactory.createTokenRepository();
-        
         this.chunkService = chunkService || new ChunkService(this.repositoryFactory);
         this.chatHistoryService = chatHistoryService || new ChatHistoryService(this.repositoryFactory);
         
-        this.chatService = chatService || new GeminiChatService(this.repositoryFactory, this.chatHistoryService);
+        this.tinyClient = tinyClient || new TinyClientService(process.env.TINY_API_TOKEN || '');
+        
+        this.chatService = chatService || new GeminiChatService(
+            this.repositoryFactory, 
+            this.chatHistoryService,
+            this.tinyClient 
+        );
     }
 
     async execute(input: AskQuestionInput): Promise<AskQuestionOutput> {
         if (!input.question) throw new Error("O campo pergunta é obrigatório.");
 
-        const combinedText = input.question;
-        const cleanedText = await removeStopwordsService(combinedText, "porBr");
-
+        const cleanedText = await removeStopwordsService(input.question, "por");
         const queryEmbedding = await this.chatService.generateEmbedding(
             cleanedText
         );
-
         const topChunks = await this.chunkService.findRelevantChunks(queryEmbedding);
-
+        
         const systemPrompt = SYSTEM_PROMPT;
 
         const userPrompt = `

@@ -50,7 +50,7 @@ async function bootstrap() {
 
   new TinyRoutes(http, connection).init();
 
-  const port = Number(process.env.PORT ?? 5001);
+  const port = Number(process.env.PORT ?? 5002);
   http.listen(port);
   console.log(`Running on port ${port} (NODE_ENV=${process.env.NODE_ENV ?? "development"})`);
 }
