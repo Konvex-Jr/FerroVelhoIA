@@ -19,6 +19,11 @@ export default class CreateTinyProductsTable {
         location TEXT,
         status CHAR(1),                     -- A/I/E
         created_at_tiny TIMESTAMP NULL,
+
+        -- estoque direto no produto
+        quantity NUMERIC(18,3) NOT NULL DEFAULT 0,
+        deposit_code TEXT,
+
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);

@@ -14,7 +14,6 @@ import CreateMessagesTable from "./infra/migrations/05.create_messages_table";
 
 // Tiny
 import CreateTinyProductsTable from "./infra/migrations/07.create_tiny_products_table";
-import CreateTinyProductStockTable from "./infra/migrations/08.create_tiny_product_stock_table";
 import CreateTinySyncStateTable from "./infra/migrations/09.create_tiny_sync_state_table";
 import TinyRoutes from "./infra/http/Routes/TinyRoutes"; 
 config();
@@ -36,7 +35,6 @@ async function bootstrap() {
     // await new CreateFeedbacksTable(connection).up();
 
     await new CreateTinyProductsTable(connection).up();
-    await new CreateTinyProductStockTable(connection).up();
     await new CreateTinySyncStateTable(connection).up();
   } catch (err) {
     console.error("Erro ao rodar as migrations:", err);
