@@ -5,7 +5,8 @@ import AskQuestion from "../source/useCases/askQuestion/AskQuestion";
 import AskQuestionInput from "../source/useCases/askQuestion/AskQuestionInput";
 import 'dotenv/config';
 import ChatHistoryService from '../source/domain/Services/ChatHistoryService';
-import Conversation from "../source/domain/Entity/Conversation"; // Adicionado para tipagem
+import Conversation from "../source/domain/Entity/Conversation";
+
 
 class MockChunkService {
     async findRelevantChunks(embedding: number[]) {
@@ -32,6 +33,9 @@ class MockChatService {
     }
 }
 
+class MockTinyClientService {
+}
+
 describe("AskQuestion use case", () => {
     let askQuestion: AskQuestion;
     let repositoryFactory: RepositoryFactoryInterface;
@@ -40,13 +44,17 @@ describe("AskQuestion use case", () => {
     beforeEach(() => {
         repositoryFactory = new MemoryRepositoryFactory();
         chatHistoryService = new ChatHistoryService(repositoryFactory);
+        
         const mockChatService = new MockChatService(chatHistoryService);
+        const mockChunkService = new MockChunkService();
+        const mockTinyClient = new MockTinyClientService();
 
         askQuestion = new AskQuestion(
             repositoryFactory,
-            new MockChunkService() as any,
+            mockChunkService as any,
             mockChatService as any,
-            chatHistoryService
+            chatHistoryService,
+            mockTinyClient as any 
         );
     });
 
