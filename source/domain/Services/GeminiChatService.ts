@@ -118,6 +118,7 @@ export default class GeminiChatService {
         const { searchTerm } = call.args as { searchTerm: string };
         functionResponse = await this.tinyClient.searchProducts({ pesquisa: searchTerm });
       }
+      
       else if (call.name === 'get_product_stock') {
         const { productId } = call.args as { productId: string };
         functionResponse = await this.tinyClient.getProductStock(productId);
