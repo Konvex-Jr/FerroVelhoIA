@@ -43,4 +43,10 @@ export default class ExpressHttp implements Http {
 	async listen(port: number): Promise<void> {
 		await this.app.listen(port);
 	}
+
+	public get expressApp() {
+	return this.app;
+	}
+
+
 }

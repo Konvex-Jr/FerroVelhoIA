@@ -46,7 +46,8 @@ async function bootstrap() {
 
   router.init();
 
-  new TinyRoutes(http, connection).init();
+  new TinyRoutes(http.expressApp, connection).init();
+
 
   const port = Number(process.env.PORT ?? 5002);
   http.listen(port);
