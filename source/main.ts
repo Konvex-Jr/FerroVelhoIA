@@ -5,17 +5,14 @@ import ExpressHttp from "./infra/http/ExpressHttp";
 import Router from "./infra/http/Router";
 import DatabaseRepositoryFactory from "./infra/repository/DatabaseRepositoryFactory";
 
-// Migrations
 import CreateTokensTable from "./infra/migrations/02.create_tokens_table";
 import CreateChunksTable from "./infra/migrations/03.create_chunks_table";
 import CreateConversationsTable from "./infra/migrations/04.create_conversations_table";
 import CreateMessagesTable from "./infra/migrations/05.create_messages_table";
-// import CreateFeedbacksTable from "./infra/migrations/06.create_feedbacks_table";
 
-// Tiny
 import CreateTinyProductsTable from "./infra/migrations/07.create_tiny_products_table";
 import CreateTinySyncStateTable from "./infra/migrations/09.create_tiny_sync_state_table";
-import TinyRoutes from "./infra/http/Routes/TinyRoutes"; 
+import TinyRoutes from "./infra/http/Routes/TinyRoutes";
 config();
 
 async function bootstrap() {
@@ -32,7 +29,6 @@ async function bootstrap() {
     await new CreateChunksTable(connection).up();
     await new CreateConversationsTable(connection).up();
     await new CreateMessagesTable(connection).up();
-    // await new CreateFeedbacksTable(connection).up();
 
     await new CreateTinyProductsTable(connection).up();
     await new CreateTinySyncStateTable(connection).up();
@@ -42,13 +38,11 @@ async function bootstrap() {
 
   const repositoryFactory = new DatabaseRepositoryFactory(connection);
   const http = new ExpressHttp();
-  const router = new Router(http, repositoryFactory);
+  const router = new Router(http, repositoryFactory, connection);
 
   router.init();
 
-  new TinyRoutes(http, connection).init();
-
-  const port = Number(process.env.PORT ?? 5002);
+  const port = Number(process.env.PORT ?? 5001);
   http.listen(port);
   console.log(`Running on port ${port} (NODE_ENV=${process.env.NODE_ENV ?? "development"})`);
 }

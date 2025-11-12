@@ -1,9 +1,11 @@
 import Connection from "../database/Connection";
 
 export default class CreateTinyProductsTable {
-  constructor(private connection: Connection) {}
+  constructor(private connection: Connection) { }
 
   async up(): Promise<void> {
+    await this.connection.execute(`CREATE EXTENSION IF NOT EXISTS vector;`);
+
     await this.connection.execute(`
       CREATE TABLE IF NOT EXISTS public.tiny_products (
         id BIGINT PRIMARY KEY,              -- id do Tiny
@@ -18,6 +20,7 @@ export default class CreateTinyProductsTable {
         avg_cost_price NUMERIC(18,2),
         location TEXT,
         status CHAR(1),                     -- A/I/E
+        name_vector vector(768),
         created_at_tiny TIMESTAMP NULL,
 
         -- estoque direto no produto
@@ -30,6 +33,13 @@ export default class CreateTinyProductsTable {
     await this.connection.execute(`
       CREATE INDEX IF NOT EXISTS tiny_products_code_idx ON public.tiny_products(code);
     `);
+    
+    await this.connection.execute(`
+            CREATE INDEX IF NOT EXISTS tiny_products_name_vector_idx
+            ON public.tiny_products
+            USING ivfflat (name_vector vector_l2_ops)
+            WITH (lists = 100);
+        `);
   }
 
   async down(): Promise<void> {

@@ -6,21 +6,28 @@ import Connection from "../database/Connection";
 import ChunkRepositoryDatabase from "./database/ChunkRepositoryDatabase";
 import ConversationRepositoryDatabase from "./database/ConversationRepositoryDatabase";
 import TokenRepositoryDatabase from "./database/TokenRepositoryDatabase";
+import TinyRepositoryDatabase from "./TinyRepositoryDatabase";
+import { TinyRepositoryInterface } from "../../domain/Interfaces/TinyRepositoryInterface";
 
 export default class DatabaseRepositoryFactory implements RepositoryFactoryInterface {
 
     readonly tokenRepository: TokenRepositoryInterface;
     readonly chunkRepository: ChunkRepositoryInterface;
     readonly conversationRepository: ConversationRepositoryInterface;
+    readonly tinyRepository: TinyRepositoryInterface;
 
     constructor(connection: Connection) {
         this.tokenRepository = new TokenRepositoryDatabase(connection);
         this.chunkRepository = new ChunkRepositoryDatabase(connection);
         this.conversationRepository = new ConversationRepositoryDatabase(connection);
+        this.tinyRepository = new TinyRepositoryDatabase(connection);
     }
 
     createTokenRepository(): TokenRepositoryInterface { return this.tokenRepository; }
     createChunkRepository(): ChunkRepositoryInterface { return this.chunkRepository; }
     createConversationRepository(): ConversationRepositoryInterface { return this.conversationRepository; }
-   
+
+    createTinyRepository(): TinyRepositoryInterface {
+        return this.tinyRepository;
+    }
 }

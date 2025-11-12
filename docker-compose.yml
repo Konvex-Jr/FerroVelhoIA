@@ -23,7 +23,7 @@ services:
     env_file:
       - .env
     ports:
-      - "5001:5001"
+      - "5002:5002"
     depends_on:
       postgres:
         condition: service_healthy
@@ -35,8 +35,6 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       TINY_API_TOKEN: ${TINY_API_TOKEN}
-    command: >
-      sh -c "npm run build && node dist/main.js"
 
   tiny_sync:
     image: node:20-alpine
