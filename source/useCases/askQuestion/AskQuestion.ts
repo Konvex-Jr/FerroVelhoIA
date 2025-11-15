@@ -9,6 +9,7 @@ import GeminiChatService from "../../domain/Services/GeminiChatService";
 import ChatHistoryService from "../../domain/Services/ChatHistoryService";
 import removeStopwordsService from "../../domain/Services/removeStopwordsService";
 import TinyClientService from "../../infra/clients/TinyClient"; 
+import { randomUUID } from "crypto";
 
 export default class AskQuestion {
     private repositoryFactory: RepositoryFactoryInterface;
@@ -42,6 +43,16 @@ export default class AskQuestion {
 
     async execute(input: AskQuestionInput): Promise<AskQuestionOutput> {
         if (!input.question) throw new Error("O campo pergunta é obrigatório.");
+        
+        if (!input.userId) input.userId = randomUUID();
+        else{
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if(!uuidRegex.test(input.userId)) {
+            input.userId = String(input.userId);
+            }
+
+        }
+
 
         const cleanedText = await removeStopwordsService(input.question, "por");
         const queryEmbedding = await this.chatService.generateEmbedding(
