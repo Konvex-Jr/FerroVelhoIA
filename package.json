@@ -30,12 +30,10 @@
     "jest": "^29.7.0",
     "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.11.0",
-    "openai": "^5.20.0",
     "pdf-parse": "^1.1.1",
     "pg-promise": "^11.10.2",
     "prisma": "^5.14.0",
     "stopword": "^3.1.5",
-    "tiktoken": "^1.0.22",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

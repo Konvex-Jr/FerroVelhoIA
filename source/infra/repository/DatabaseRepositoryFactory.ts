@@ -12,8 +12,10 @@ export default class DatabaseRepositoryFactory implements RepositoryFactoryInter
     readonly tokenRepository: TokenRepositoryInterface;
     readonly chunkRepository: ChunkRepositoryInterface;
     readonly conversationRepository: ConversationRepositoryInterface;
+    readonly connection: Connection;
 
     constructor(connection: Connection) {
+        this.connection = connection;
         this.tokenRepository = new TokenRepositoryDatabase(connection);
         this.chunkRepository = new ChunkRepositoryDatabase(connection);
         this.conversationRepository = new ConversationRepositoryDatabase(connection);
@@ -22,5 +24,6 @@ export default class DatabaseRepositoryFactory implements RepositoryFactoryInter
     createTokenRepository(): TokenRepositoryInterface { return this.tokenRepository; }
     createChunkRepository(): ChunkRepositoryInterface { return this.chunkRepository; }
     createConversationRepository(): ConversationRepositoryInterface { return this.conversationRepository; }
-   
+    createConnection(): Connection { return this.connection; }
+
 }

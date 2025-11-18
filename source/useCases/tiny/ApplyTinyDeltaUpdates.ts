@@ -9,7 +9,7 @@ function toNumber(val: any): number {
 }
 
 export default class ApplyTinyDeltaUpdates {
-  constructor(private connection: Connection, private tiny: TinyClient) {}
+  constructor(private connection: Connection, private tiny: TinyClient) { }
 
   private async getLastSync(): Promise<string | null> {
     const rows: any[] = await this.connection.execute(
@@ -31,7 +31,7 @@ export default class ApplyTinyDeltaUpdates {
   private nowBR(): string {
     const d = new Date();
     const pad = (n: number) => (n < 10 ? "0" + n : String(n));
-    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
   async run(): Promise<void> {
@@ -74,8 +74,8 @@ export default class ApplyTinyDeltaUpdates {
           const detail = await this.tiny.getProductStock(pid);
           // formatos: retorno.estoques[]  OU retorno.produto.depositos[]
           const estoques = detail?.retorno?.estoques
-                        || detail?.retorno?.produto?.depositos
-                        || [];
+            || detail?.retorno?.produto?.depositos
+            || [];
           await this.updateProductQuantity(pid, estoques);
         } catch (e: any) {
           console.warn(`Falha ao obter estoque do produto ${pid}:`, e?.message ?? e);
@@ -93,14 +93,31 @@ export default class ApplyTinyDeltaUpdates {
 
   private async upsertProductRow(p: any) {
     await this.connection.execute(
-      `INSERT INTO public.tiny_products
-         (id, code, name, sku, gtin, unit, price, promo_price, cost_price, avg_cost_price, location, status, created_at_tiny, updated_at)
-       VALUES
-         ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,to_timestamp(NULLIF($13,'')::text, 'DD/MM/YYYY HH24:MI:SS'), NOW())
-       ON CONFLICT (id) DO UPDATE SET
-         code=EXCLUDED.code, name=EXCLUDED.name, sku=EXCLUDED.sku, gtin=EXCLUDED.gtin, unit=EXCLUDED.unit,
-         price=EXCLUDED.price, promo_price=EXCLUDED.promo_price, cost_price=EXCLUDED.cost_price, avg_cost_price=EXCLUDED.avg_cost_price,
-         location=EXCLUDED.location, status=EXCLUDED.status, created_at_tiny=EXCLUDED.created_at_tiny, updated_at=NOW();`,
+      `INSERT INTO public.tiny_products (
+          id, code, name, sku, gtin, unit, price, promo_price, cost_price, avg_cost_price,
+          location, status, created_at_tiny, updated_at, 
+          needs_vectorization -- <--- GARANTE QUE NOVOS PRODUTOS SEJAM VETORIZADOS
+        ) VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,
+          to_timestamp(NULLIF($13,'')::text, 'DD/MM/YYYY HH24:MI:SS'),
+          NOW(),
+          TRUE 
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          code=EXCLUDED.code,
+          name=EXCLUDED.name,
+          sku=EXCLUDED.sku,
+          gtin=EXCLUDED.gtin,
+          unit=EXCLUDED.unit,
+          price=EXCLUDED.price,
+          promo_price=EXCLUDED.promo_price,
+          cost_price=EXCLUDED.cost_price,
+          avg_cost_price=EXCLUDED.avg_cost_price,
+          location=EXCLUDED.location,
+          status=EXCLUDED.status,
+          created_at_tiny=EXCLUDED.created_at_tiny,
+          updated_at=NOW(),
+          needs_vectorization=TRUE;`, 
       [
         p.id, p.codigo ?? null, p.nome ?? null, p.codigo ?? null, p.gtin ?? null, p.unidade ?? null,
         p.preco ?? null, p.preco_promocional ?? null, p.preco_custo ?? null, p.preco_custo_medio ?? null,

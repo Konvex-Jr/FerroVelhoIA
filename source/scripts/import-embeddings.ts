@@ -26,7 +26,7 @@ export default class ImportEmbeddings {
 
         const chatHistoryService = new ChatHistoryService(repositoryFactory);
         const tinyClient = new TinyClientService(process.env.TINY_API_TOKEN || '')
-        this.chatService = new GeminiChatService(repositoryFactory, chatHistoryService, tinyClient);
+        this.chatService = new GeminiChatService(repositoryFactory, chatHistoryService);
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) throw new Error("GEMINI_API_KEY não definida");

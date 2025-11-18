@@ -13,8 +13,14 @@ export default class EvolutionRoutes {
     this.http.route("post", "/webhook/evolution", false, async (_params: any, body: any) => {
     try {
 
+      // Ignora mensagens enviadas pelo próprio bot
+        const isFromMe = body?.data?.key?.fromMe || body?.key?.fromMe || false;
+        if (isFromMe) {
+            return { status: "ignored_self" };
+        }
         const messageData =
         body?.data?.message?.conversation ||
+        body?.data?.message?.extendedTextMessage?.text ||
         body?.message?.text ||
         body?.message?.conversation ||
         body?.text; 
@@ -24,7 +30,7 @@ export default class EvolutionRoutes {
         body?.from?.replace("@s.whatsapp.net", "") ||
         body?.remoteJid?.replace("@s.whatsapp.net", "");
 
-      if(!messageData || !from) {
+      if(!messageData || !from || from === "status@broadcast") {
         console.log("❌ Webhook ignorado - formato inválido:", body);
         return { status: "ignored" };
       }

@@ -2,6 +2,7 @@ import ChunkRepositoryInterface from "../../domain/Interfaces/ChunkRepositoryInt
 import ConversationRepositoryInterface from "../../domain/Interfaces/ConversationRepositoryInterface";
 import RepositoryFactoryInterface from "../../domain/Interfaces/RepositoryFactoryInterface";
 import TokenRepositoryInterface from "../../domain/Interfaces/TokenRepositoryInterface";
+import Connection from "../database/Connection";
 import ChunkRepositoryMemory from "./memory/ChunkRepositoryMemory";
 import ConversationRepositoryMemory from "./memory/ConversationRepositoryMemory";
 import TokenRepositoryMemory from "./memory/TokenRepositoryMemory";
@@ -18,8 +19,6 @@ export default class MemoryRepositoryFactory implements RepositoryFactoryInterfa
         this.conversationRepository = new ConversationRepositoryMemory();
     }
 
-    
-
     createTokenRepository(): TokenRepositoryInterface {
         return this.tokenRepository;
     }
@@ -32,5 +31,7 @@ export default class MemoryRepositoryFactory implements RepositoryFactoryInterfa
         return this.conversationRepository;
     }
 
-    
+    createConnection(): Connection {
+        throw new Error("MemoryRepositoryFactory não suporta conexão com banco real (PostgreSQL). Use DatabaseRepositoryFactory.");
+    }
 }
