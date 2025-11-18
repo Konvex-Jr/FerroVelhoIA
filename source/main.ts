@@ -1,4 +1,8 @@
 import { config } from "dotenv";
+import path from "path";
+
+// Garante carregamento do .env da raiz
+config({ path: path.resolve(process.cwd(), ".env") });
 
 import PostgreSQLConnection from "./infra/database/PostgreSQLConnection";
 import ExpressHttp from "./infra/http/ExpressHttp";
@@ -14,18 +18,18 @@ import CreateMessagesTable from "./infra/migrations/05.create_messages_table";
 // Tiny Migrations & UseCases
 import CreateTinyProductsTable from "./infra/migrations/07.create_tiny_products_table";
 import CreateTinySyncStateTable from "./infra/migrations/09.create_tiny_sync_state_table";
-import VectorizeProducts from "./useCases/tiny/VectorizeProducts"; 
+import VectorizeProducts from "./useCases/tiny/VectorizeProducts";
 import GeminiChatService from "./domain/Services/GeminiChatService";
-import ChatHistoryService from "./domain/Services/ChatHistoryService"; // Importe o History
+import ChatHistoryService from "./domain/Services/ChatHistoryService";
 
 import RagController from "./infra/controller/RagController";
 import AskQuestion from "./useCases/askQuestion/AskQuestion";
 import EvolutionRoutes from "./infra/http/Routes/EvolutionRoutes";
 import TinyClientService from "./infra/clients/TinyClient";
 
-config();
-
 async function bootstrap() {
+  console.log("🚀 Iniciando aplicação...");
+
   // 1. CONEXÃO REAL COM O BANCO
   const connection = new PostgreSQLConnection({
     user: process.env.DB_USERNAME ?? "postgres",
@@ -35,18 +39,18 @@ async function bootstrap() {
     port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432
   });
 
-  // 2. RODAR MIGRATIONS
+  // 2. RODAR MIGRATIONS (Garante estrutura do banco)
   try {
-    // console.log("Rodando migrations...");
     await new CreateTokensTable(connection).up();
     await new CreateChunksTable(connection).up();
     await new CreateConversationsTable(connection).up();
     await new CreateMessagesTable(connection).up();
     await new CreateTinyProductsTable(connection).up();
     await new CreateTinySyncStateTable(connection).up();
-    // console.log("Migrations finalizadas.");
+    console.log("✅ Migrations verificadas.");
   } catch (err) {
-    console.error("Erro ao rodar as migrations:", err);
+    console.error("❌ Erro ao rodar as migrations:", err);
+    // Não matamos o processo aqui, pois pode ser erro de "tabela já existe" que a migration já trata
   }
 
   // 3. FACTORY E HTTP
@@ -58,48 +62,45 @@ async function bootstrap() {
 
   // 4. INICIALIZAÇÃO DOS SERVIÇOS
   const tinyClient = new TinyClientService(process.env.TINY_API_TOKEN || '');
-  
-  // Instancia o Histórico
   const chatHistoryService = new ChatHistoryService(repositoryFactory);
 
-  // --- CORREÇÃO AQUI ---
-  // Removemos o tinyClient deste construtor. 
-  // O GeminiChatService agora é puro (só texto), pois o AskQuestion já injeta os produtos no prompt.
+  // GeminiChatService "Puro" (Sem TinyClient, focado em texto/vetores)
   const chatService = new GeminiChatService(
-      repositoryFactory, 
-      chatHistoryService
-      // tinyClient removido daqui!
+    repositoryFactory,
+    chatHistoryService
   );
-  
-  // Injetamos tudo no AskQuestion
+
+  // AskQuestion com todas as dependências injetadas (RAG completo)
   const askQuestionUseCase = new AskQuestion(
-      repositoryFactory, 
-      undefined, // ChunkService (padrão)
-      chatService, // O serviço corrigido
-      chatHistoryService,
-      tinyClient // O AskQuestion ainda recebe o TinyClient (usado internamente ou para fallback)
+    repositoryFactory,
+    undefined, // ChunkService padrão
+    chatService,
+    chatHistoryService,
+    tinyClient
   );
-  
+
   const ragController = new RagController(askQuestionUseCase);
 
-  // Rotas do WhatsApp
+  // Rotas do WhatsApp (Evolution API)
   new EvolutionRoutes(http, ragController).init();
 
-  // 5. JOB DE VETORIZAÇÃO
-  // Usamos o mesmo chatService (que já está configurado sem o tinyClient, perfeito para gerar embeddings)
+  // 5. JOB DE VETORIZAÇÃO (Background)
   const vectorizeJob = new VectorizeProducts(connection, chatService);
 
   setInterval(async () => {
-      try {
-          await vectorizeJob.execute();
-      } catch (e) {
-          console.error("[Main] Erro no job de vetorização:", e);
-      }
-  }, 60 * 1000);
+    try {
+      await vectorizeJob.execute();
+    } catch (e) {
+      console.error("[Main] Erro no job de vetorização:", e);
+    }
+  }, 60 * 1000); // Roda a cada 60s
 
-  const port = Number(process.env.PORT ?? 5001);
-  http.listen(port);
-  console.log(`Running on port ${port} (NODE_ENV=${process.env.NODE_ENV ?? "development"})`);
+  const port = Number(process.env.PORT ?? 5001); // Porta padrão 5001 (ajustado para bater com seu log anterior)
+  await http.listen(port);
+  console.log(`Server running on port ${port} (NODE_ENV=${process.env.NODE_ENV ?? "development"})`);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error("Failed to bootstrap application", err);
+  process.exit(1);
+});
