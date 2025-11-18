@@ -7,7 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const baseUrl = process.env.EVOLUTION_API_URL!;
 const instance = process.env.EVOLUTION_INSTANCE!;
 const apiKey = process.env.EVOLUTION_API_KEY!;
-const number = "5549998245916"; // ✅ ajuste aqui se quiser testar outro número
+const number = "5547999519493"; //  ajuste aqui se quiser testar outro número
 
 async function testSendMessage() {
   console.log("Carregando .env de:", path.resolve(__dirname, "../.env"));
@@ -21,7 +21,7 @@ async function testSendMessage() {
   // ⚙️ formato EXATO que sua instância espera (sem textMessage)
   const payload = {
     number, // número puro, sem @s.whatsapp.net
-    text: "como voce ta cara? tudo certo ai?",
+    text: "fala",
   };
 
   try {

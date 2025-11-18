@@ -4,29 +4,20 @@ import PostgreSQLConnection from "./infra/database/PostgreSQLConnection";
 import ExpressHttp from "./infra/http/ExpressHttp";
 import Router from "./infra/http/Router";
 import DatabaseRepositoryFactory from "./infra/repository/DatabaseRepositoryFactory";
+import MemoryRepositoryFactory from "./infra/repository/MemoryRepositoryFactory";
 
-import MemoryRepositoryFactory from "./infra/repository/MemoryRepositoryFactory"; 
-
-// Migrations
 import CreateTokensTable from "./infra/migrations/02.create_tokens_table";
 import CreateChunksTable from "./infra/migrations/03.create_chunks_table";
 import CreateConversationsTable from "./infra/migrations/04.create_conversations_table";
 import CreateMessagesTable from "./infra/migrations/05.create_messages_table";
-// import CreateFeedbacksTable from "./infra/migrations/06.create_feedbacks_table";
-
-// Tiny
 import CreateTinyProductsTable from "./infra/migrations/07.create_tiny_products_table";
 import CreateTinySyncStateTable from "./infra/migrations/09.create_tiny_sync_state_table";
-import TinyRoutes from "./infra/http/Routes/TinyRoutes"; 
 
 import RagController from "./infra/controller/RagController";
 import AskQuestion from "./useCases/askQuestion/AskQuestion";
 import EvolutionRoutes from "./infra/http/Routes/EvolutionRoutes";
 
-
 config();
-
-
 
 async function bootstrap() {
   /*
@@ -56,21 +47,19 @@ async function bootstrap() {
   const repositoryFactory = new MemoryRepositoryFactory();
   const http = new ExpressHttp();
   const router = new Router(http, repositoryFactory);
-
   router.init();
 
-  // new TinyRoutes(http.expressApp, connection).init();
-  
   const askQuestionUseCase = new AskQuestion(repositoryFactory);
   const ragController = new RagController(askQuestionUseCase);
 
   new EvolutionRoutes(http, ragController).init();
 
-
   const port = Number(process.env.PORT ?? 5002);
-  http.listen(port);
+  await http.listen(port);
   console.log(`Running on port ${port} (NODE_ENV=${process.env.NODE_ENV ?? "development"})`);
 }
 
-bootstrap();
-
+bootstrap().catch((err) => {
+  console.error("Failed to bootstrap application", err);
+  process.exit(1);
+});
