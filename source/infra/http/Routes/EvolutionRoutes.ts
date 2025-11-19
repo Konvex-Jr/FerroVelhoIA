@@ -14,7 +14,8 @@ export default class EvolutionRoutes {
   init(): void {
     const paths = [
       "/webhook/evolution",
-      "/ask/contact-update", // Rotas extras caso precise no futuro
+      "/ask/contacts-update", // Rotas extras caso precise no futuro
+      "/ask/messages-upsert"
     ];
 
     for (const path of paths) {
