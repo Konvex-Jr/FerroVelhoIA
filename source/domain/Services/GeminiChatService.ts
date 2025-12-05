@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, Tool, SchemaType } from "@google/generative-ai";
-import TinyClientService from "../../infra/clients/TinyClient"; // ADICIONADO (Precisamos importar)
+import TinyClientService from "../../infra/clients/TinyClient";
 import { ModelType } from "../Enums/ModelType";
 import { TokenType } from "../Enums/TokenType";
 import RepositoryFactoryInterface from "../Interfaces/RepositoryFactoryInterface";
@@ -14,13 +14,13 @@ const tools: Tool[] = [
     functionDeclarations: [
       {
         name: "search_products_by_name",
-        description: "Busca produtos no sistema TinyERP com base em um nome, SKU ou termo de pesquisa. Retorna uma lista de produtos.",
+        description: "Busca produtos no TinyERP. IMPORTANTE: A busca é exata, então nem sempre será totalmente igual ao que o cliente pedir. DICA: Remova preposições (de, para, com) e palavras muito específicas na primeira tentativa, ou faça múltiplas chamadas tentando variações. REGRA CRÍTICA DE FUNCIONAMENTO: Se a busca exata falhar, esta função DEVE buscar automaticamente por termos parciais. O modelo NÃO deve pedir permissão para buscar termos genéricos, deve apenas executar.",
         parameters: {
           type: SchemaType.OBJECT,
           properties: {
             searchTerm: {
               type: SchemaType.STRING,
-              description: "O nome, SKU ou termo para pesquisar o produto (ex: 'Parafuso', 'Camisa Azul')"
+              description: "O nome, SKU ou termo para pesquisar o produto."
             }
           },
           required: ["searchTerm"]
@@ -48,12 +48,12 @@ export default class GeminiChatService {
   private gemini: GoogleGenerativeAI;
   private tokenRepository: TokenRepositoryInterface;
   private chatHistoryService: ChatHistoryService;
-  private tinyClient: TinyClientService; // ADICIONADO: A propriedade da classe
+  private tinyClient: TinyClientService;
 
   constructor(
       repositoryFactory: RepositoryFactoryInterface, 
       chatHistoryService: ChatHistoryService, 
-      tinyClient: TinyClientService, // ADICIONADO: O parâmetro
+      tinyClient: TinyClientService,
       gemini?: GoogleGenerativeAI
   ) {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -61,7 +61,7 @@ export default class GeminiChatService {
     this.gemini = gemini || new GoogleGenerativeAI(apiKey);
     this.tokenRepository = repositoryFactory.createTokenRepository();
     this.chatHistoryService = chatHistoryService;
-    this.tinyClient = tinyClient; // ADICIONADO: A atribuição
+    this.tinyClient = tinyClient;
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
@@ -83,10 +83,11 @@ export default class GeminiChatService {
 
   async chatWithConversation(conversation: Conversation, model: ModelType, systemPrompt: string, userPrompt: string): Promise<string> {
     const previousMessages: Message[] = await this.chatHistoryService.getChatHistory(conversation.id);
+    
     const historyContents = previousMessages.map(m => ({
       role: m.role as ("user" | "model"),
       parts: [{ text: m.content }]
-    }))
+    }));
 
     const modelInstance = this.gemini.getGenerativeModel({
       model,
@@ -98,56 +99,59 @@ export default class GeminiChatService {
       history: historyContents
     });
 
-    const result = await chat.sendMessage(userPrompt);
-    const response = result.response;
-    const functionCalls = response.functionCalls();
+    let result = await chat.sendMessage(userPrompt);
+    let response = result.response;
+    let functionCalls = response.functionCalls();
 
-    if (!functionCalls || functionCalls.length === 0) {
-      const reply = response.text();
-      await this.chatHistoryService.addMessage(conversation.id, "user", userPrompt);
-      await this.chatHistoryService.addMessage(conversation.id, "model", reply);
-      this.saveTokenUsage(response.usageMetadata, model);
-      return reply;
-    }
+    let maxRecursion = 3; 
 
-    const call = functionCalls[0];
-    let functionResponse: any = null;
-
-    try {
-      if (call.name === 'search_products_by_name') {
-        const { searchTerm } = call.args as { searchTerm: string };
-        functionResponse = await this.tinyClient.searchProducts({ pesquisa: searchTerm });
-      }
+    while (functionCalls && functionCalls.length > 0 && maxRecursion > 0) {
+      maxRecursion--;
       
-      else if (call.name === 'get_product_stock') {
-        const { productId } = call.args as { productId: string };
-        functionResponse = await this.tinyClient.getProductStock(productId);
+      const call = functionCalls[0];
+      let functionResponse: any = null;
+
+      console.log(`[Gemini] Chamando ferramenta: ${call.name} com args:`, call.args);
+
+      try {
+        if (call.name === 'search_products_by_name') {
+          const { searchTerm } = call.args as { searchTerm: string };
+          functionResponse = await this.tinyClient.searchProducts({ pesquisa: searchTerm });
+        }
+        else if (call.name === 'get_product_stock') {
+          const { productId } = call.args as { productId: string };
+          functionResponse = await this.tinyClient.getProductStock(productId);
+        }
+
+        if (functionResponse === null) {
+          functionResponse = { erro: "Função não implementada ou sem retorno." };
+        }
+
+      } catch (e: any) {
+        console.error(`[Gemini] Erro ao executar ${call.name}:`, e.message);
+        functionResponse = { erro: `Falha ao executar a função: ${e.message}` };
       }
 
-      if (functionResponse === null) {
-        functionResponse = { erro: "Função não implementada no lado do servidor." };
-      }
 
-    } catch (e: any) {
-      console.error(`[TinyClient] Erro ao executar ${call.name}:`, e.message);
-      functionResponse = { erro: `Falha ao executar a função: ${e.message}` };
+      result = await chat.sendMessage([
+        {
+          functionResponse: {
+            name: call.name,
+            response: functionResponse
+          }
+        }
+      ]);
+
+      response = result.response;
+      functionCalls = response.functionCalls();
     }
 
-    const resultAfterFunctionCall = await chat.sendMessage([
-      {
-        functionResponse: {
-          name: call.name,
-          response: functionResponse // Envia o JSON/resultado do Tiny
-        }
-      }
-    ]);
-
-    const finalResponse = resultAfterFunctionCall.response;
-    const reply = finalResponse.text();
+    const reply = response.text();
 
     await this.chatHistoryService.addMessage(conversation.id, "user", userPrompt);
     await this.chatHistoryService.addMessage(conversation.id, "model", reply);
-    this.saveTokenUsage(finalResponse.usageMetadata, model);
+    
+    this.saveTokenUsage(response.usageMetadata, model);
 
     return reply;
   }
