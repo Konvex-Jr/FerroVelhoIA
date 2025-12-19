@@ -9,6 +9,7 @@ export default class ExpressHttp implements Http {
 	constructor() {
 		this.app = express();
 		this.app.use(express.json());
+		this.app.use(express.urlencoded({ extended: true }));
 		// @ts-ignore
 		this.app.all('*', function (req, res, next) {
 			res.header('Access-Control-Allow-Origin', '*');
