@@ -2,6 +2,7 @@
 Solução de Inteligência Artificial integrada ao WhatsApp (Evolution API) e ERP Tiny, utilizando busca semântica (RAG) para automatizar a venda de peças, identificação de inventário e atendimento ao cliente.
 
 📋 Índice
+
 Visão Geral
 
 Características Principais
@@ -132,3 +133,4 @@ Realize o login na plataforma
 Configure as Variáveis de Ambiente (.env) no painel
 
 Clique em Deploy
+
