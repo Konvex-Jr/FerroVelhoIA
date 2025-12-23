@@ -100,7 +100,7 @@ O **Ferro Velho IA** foi desenvolvido para modernizar a experiência de compra n
 │  │ (Produtos)  │      │  (Prisma)    │ │
 │  └─────────────┘      └──────────────┘ │
 └─────────────────────────────────────────┘
-
+````
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -142,6 +142,8 @@ source/
 ├── useCases/               # Orquestração dos fluxos
 └── main.ts                 # Entry point da aplicação
 
+```
+
 ---
 
 ## 📦 Integração com ERP Tiny
@@ -168,3 +170,21 @@ Para que a **busca semântica** funcione corretamente, é necessário processar 
 
 ```bash
 npm run import:embeddings
+```
+
+---
+## 🔧 Configuração e Instalação
+### 🚀 Produção (VPS Contabo)
+
+O deploy é realizado via EasyPanel no servidor VPS:
+
+Acesse:
+
+http://185.252.233.252:3000
+
+
+Realize o login na plataforma
+
+Configure as variáveis de ambiente (.env) no painel
+
+Clique em Deploy
