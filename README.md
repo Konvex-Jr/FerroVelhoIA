@@ -38,26 +38,12 @@ O **Ferro Velho IA** foi desenvolvido para modernizar a experiência de compra n
   - Disponibilidade
   - Descrição de peças  
 
-- **Tratamento de Mensagens**  
-  Suporte a:
-  - Texto
-  - Imagens
-  - Documentos
-  - Botões interativos  
-  Recebidos via **Evolution API**
-
 - **Persistência de Contexto**  
   Gerenciamento de conversas através do `remoteJid`, mantendo o histórico do cliente.
 
 ---
 
 ### 🧩 Filtros e Especialização
-- **Filtro Automático de Categoria**
-  - Motor
-  - Lataria
-  - Elétrica
-  - Suspensão
-
 - **Lógica de Fallback Inteligente**
   - Reinterpretação da pergunta
   - Solicitação de mais detalhes quando o modelo ou peça não são identificados
@@ -89,10 +75,10 @@ O **Ferro Velho IA** foi desenvolvido para modernizar a experiência de compra n
 ┌─────────────────────────────────────────┐
 │          Ferro Velho IA (Node.js)       │
 │                                         │
-│  ┌─────────────┐      ┌──────────────┐ │
-│  │ UseCases    │─────▶│  OpenAI API  │ │
-│  │ (Lógica)    │      │   (GPT-4)    │ │
-│  └─────────────┘      └──────────────┘ │
+│  ┌─────────────┐      ┌──────────────┐  │
+│  │ UseCases    │─────▶│  Gemeni API |  │
+│  │ (Lógica)    │      │   (GPT-4)    │  │
+│  └─────────────┘      └──────────────┘  │
 │          │                   │          │
 │          ▼                   ▼          │
 │  ┌─────────────┐      ┌──────────────┐ │
@@ -107,13 +93,10 @@ O **Ferro Velho IA** foi desenvolvido para modernizar a experiência de compra n
 - **Linguagem:** JavaScript / Node.js  
 - **Comunicação:** Evolution API (WhatsApp)  
 - **IA / ML:**  
-  - OpenAI (GPT-4)  
+  - Gemini
   - Embeddings para busca por similaridade (RAG)  
-- **Banco de Dados:** PostgreSQL + Prisma ORM  
-- **Infraestrutura:**  
-  - Linux (Fedora)  
-  - Docker  
-
+- **Banco de Dados:** PostgreSQL + Prisma ORM
+- 
 ---
 
 ## 📂 Estrutura do Projeto
@@ -188,3 +171,4 @@ Realize o login na plataforma
 Configure as variáveis de ambiente (.env) no painel
 
 Clique em Deploy
+
